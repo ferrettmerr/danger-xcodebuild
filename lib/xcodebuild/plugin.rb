@@ -49,6 +49,8 @@ module Danger
     # @return   [warning_count]
     #
     def parse_warnings
+      return unless @xcodebuild_json
+
       @warning_count = @xcodebuild_json["warnings"].count
       @warning_count = @warning_count + @xcodebuild_json["ld_warnings"].count
       @warning_count = @warning_count + @xcodebuild_json["compile_warnings"].count
@@ -66,6 +68,8 @@ module Danger
     # @return   [error_count]
     #
     def parse_errors
+      return unless @xcodebuild_json
+
       errors = @xcodebuild_json["errors"].map {|x| "`#{x}`"}
       errors += @xcodebuild_json["compile_errors"].map {|x| "`[#{x["file_path"].split("/").last}] #{x["reason"]}`"}
       errors += @xcodebuild_json["file_missing_errors"].map {|x| "`[#{x["file_path"].split("/").last}] #{x["reason"]}`"}
@@ -89,6 +93,8 @@ module Danger
     # @return   [test_failures]
     #
     def parse_tests
+      return unless @xcodebuild_json
+
       test_failures = Array.new
       @xcodebuild_json["tests_failures"].each do |key, value|
         test_failures += value.map {|x| "`[#{x["file_path"].split("/").last}] [#{x["test_case"]}] #{x["reason"]}`"}
@@ -112,18 +118,20 @@ module Danger
     # @return   [is_perfect_build]
     #
     def perfect_build
+      return unless @xcodebuild_json
+
       is_perfect_build = @warning_count == 0 && @error_count == 0 && @test_failures_count == 0
       if post_messages
-          message = Array.new
-          message.push (@build_title) unless @build_title.nil?
-          message.push ("Perfect build 👍🏻")
-          message(message.reject(&:empty?).join(" ")) if is_perfect_build
+        message = Array.new
+        message.push (@build_title) unless @build_title.nil?
+        message.push ("Perfect build 👍🏻")
+        message(message.reject(&:empty?).join(" ")) if is_perfect_build
       end
       return is_perfect_build
     end
 
     def self.instance_name
-          to_s.gsub("Danger", "").danger_underscore.split("/").last
+      to_s.gsub("Danger", "").danger_underscore.split("/").last
     end
   end
 end
